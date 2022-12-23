@@ -4,6 +4,7 @@ import java.sql.SQLException;
 
 import static database.PostgreSql.connectDatabase;
 import static servers.ActivityServer.createActivityServer;
+import static servers.ReservationServer.createReservationServer;
 import static servers.RoomServer.createRoomServer;
 
 public class Main {
@@ -11,5 +12,6 @@ public class Main {
         connectDatabase();
         createRoomServer();
         createActivityServer();
+        createReservationServer();
     }
 }
