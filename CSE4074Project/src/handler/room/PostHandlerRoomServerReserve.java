@@ -27,7 +27,8 @@ public class PostHandlerRoomServerReserve implements HttpHandler {
         BufferedReader br = new BufferedReader(isr);
         String query = br.readLine();
         parameters = parseQuery(he.getRequestURI().getQuery()); //parse the url and store the parameters in parameters map
-        if(Integer.parseInt(parameters.get("day"))>7 || Integer.parseInt(parameters.get("day"))<1 ) {
+        if(Integer.parseInt(parameters.get("day"))>7 || Integer.parseInt(parameters.get("day"))<1
+                || Integer.parseInt(parameters.get("hour"))>24 || Integer.parseInt(parameters.get("duration")) > 24) {
             response = "<HTML>\n" +
                     "<HEAD>\n" +
                     "<TITLE>Error</TITLE>\n" +
@@ -85,19 +86,21 @@ public class PostHandlerRoomServerReserve implements HttpHandler {
         stmt = c.createStatement();
         Map<String,Map<String,String>> existingReservations = new HashMap<>();
         ResultSet rs = stmt.executeQuery( "SELECT * FROM public.reservation;" ); // fetch the existing rooms
+        int i=0;
         while ( rs.next() ) {
             String  existingName = rs.getString("room");
             Map<String,String> reservations = new HashMap<>();
             reservations.put("day",rs.getString("day"));
             reservations.put("hour",rs.getString("hour"));
             reservations.put("duration",rs.getString("duration"));
-            existingReservations.put(existingName,reservations); //and then store them in an arraylist
+            existingReservations.put(i+")"+existingName,reservations); //and then store them in an arraylist
+            i++;//we are using this i to obstruct the duplicate keys in map
         }
         int wantedDay = Integer.parseInt(day.toString()); //the day that wanted to be reserved
         int wantedHour = Integer.parseInt(hour.toString()); //the hour that wanted to be reserved
         int wantedFinishHour = Integer.parseInt(duration.toString()) + wantedHour;
         for(var e : existingReservations.entrySet()){
-            if(e.getKey().equals(name.toString())){
+            if(e.getKey().substring(2).equals(name.toString())){
                 Map<String,String> currentRes = e.getValue();
                 int reservedDay = Integer.parseInt(currentRes.get("day").toString()); //the day already reserved
                 int reservedHour = Integer.parseInt(currentRes.get("hour").toString()); //the hour already reserved
@@ -107,8 +110,8 @@ public class PostHandlerRoomServerReserve implements HttpHandler {
                                 (reservationFinisHour >= wantedHour && wantedHour >= reservedHour) ||
                                 (wantedFinishHour > reservedHour && wantedFinishHour < reservationFinisHour)
                         )
-                ) isAvailable = false; // if the room reserved that time make isAvailable false
-                break;
+                ) {isAvailable = false; // if the room reserved that time make isAvailable false
+                break;}
             }}
         String insertRoom = "INSERT INTO public.reservation(\"room\", \"day\", \"hour\" , \"duration\") VALUES('" + name.toString() +"' , " + wantedDay + "," + wantedHour + "," +  Integer.parseInt(duration.toString()) + ")";
         if(isAvailable) stmt.execute(insertRoom); //if room doesn't exist insert it to database
