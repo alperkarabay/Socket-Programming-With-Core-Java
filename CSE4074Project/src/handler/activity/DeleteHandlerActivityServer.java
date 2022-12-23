@@ -1,4 +1,4 @@
-package handler.room;
+package handler.activity;
 
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
@@ -16,7 +16,7 @@ import java.util.Map;
 import static database.PostgreSql.connectDatabase;
 import static util.Parser.parseQuery;
 
-public class DeleteHandlerRoomServer implements HttpHandler {
+public class DeleteHandlerActivityServer implements HttpHandler {
     @Override
     public void handle(HttpExchange he) throws IOException {
         boolean doesExist=false;
@@ -36,9 +36,9 @@ public class DeleteHandlerRoomServer implements HttpHandler {
         if(doesExist){ //that if statement executes when the room exists before so it is deleted from database
             response = "<HTML>\n" +
                     "<HEAD>\n" +
-                    "<TITLE>Room Removed Successfully</TITLE>\n" +
+                    "<TITLE>Activity Removed Successfully</TITLE>\n" +
                     "</HEAD>\n" +
-                    "<BODY> Room with name" + parameters.get("name") + " is successfully removed </BODY>\n" +
+                    "<BODY> Activity with name " + parameters.get("name") + " is successfully removed </BODY>\n" +
                     "</HTML>";
             he.sendResponseHeaders(200, response.length());
         }
@@ -46,7 +46,7 @@ public class DeleteHandlerRoomServer implements HttpHandler {
             response = "<HTML>\n" +
                     "<HEAD>\n" +
                     "<TITLE>Error</TITLE>\n" +
-                    "</HEAD> <BODY> Room with name " + parameters.get("name") + " is not found. </BODY>\n" +
+                    "</HEAD> <BODY> Activity with name " + parameters.get("name") + " is not found. </BODY>\n" +
                     "</HTML>";
             he.sendResponseHeaders(403, response.length());
         }
@@ -61,21 +61,22 @@ public class DeleteHandlerRoomServer implements HttpHandler {
                         "alper", "pass"); //get the connection
         Statement stmt = null;
         stmt = c.createStatement();
-        List<String> existingRooms = new ArrayList<>();
-        ResultSet rs = stmt.executeQuery( "SELECT name FROM room;" ); // fetch the existing rooms
+        List<String> existingActivities = new ArrayList<>();
+        ResultSet rs = stmt.executeQuery( "SELECT name FROM activity;" ); // fetch the existing rooms
         while ( rs.next() ) {
             String  existingName = rs.getString("name");
-            existingRooms.add(existingName); //and then store them in an arraylist
+            existingActivities.add(existingName); //and then store them in an arraylist
         }
-        for(int i=0; i<existingRooms.size(); i++)
-            if(existingRooms.get(i).equals(name.toString())){
+        for(int i=0; i<existingActivities.size(); i++)
+            if(existingActivities.get(i).equals(name.toString())){
                 doesExist=true; // if the room already exists, turn the doesExist variable into true
                 break;
             }
-        String deleteRoom = "DELETE FROM public.room WHERE name = '" + name.toString() +"'";
-        if(doesExist) stmt.execute(deleteRoom); //if room exists delete it from database
+        String removeActivity = "DELETE FROM public.activity WHERE name = '" + name.toString() +"'";
+        if(doesExist) stmt.execute(removeActivity); //if room exists delete it from database
         stmt.close();
         c.close(); //close the connection
         return doesExist;
     }
+
 }

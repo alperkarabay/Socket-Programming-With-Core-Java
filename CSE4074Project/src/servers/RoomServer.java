@@ -12,10 +12,8 @@ public class RoomServer {
         HttpServer roomServer = HttpServer.create(new InetSocketAddress(port), 0);
         System.out.println("Room server started at " + port);
         roomServer.createContext("/", new RootHandlerRoomServer());
-        roomServer.createContext("/echoHeader", new EchoHeaderHandlerRoomServer());
-        roomServer.createContext("/echoGet", new EchoGetHandlerRoomServer());
         roomServer.createContext("/add", new PostHandlerRoomServerAdd());
-        roomServer.createContext("/delete", new DeleteHandlerRoomServer());
+        roomServer.createContext("/remove", new DeleteHandlerRoomServer());
         roomServer.createContext("/reserve", new PostHandlerRoomServerReserve());
         roomServer.createContext("/checkavailability", new GetHandlerRoomServerAvailability());
 
