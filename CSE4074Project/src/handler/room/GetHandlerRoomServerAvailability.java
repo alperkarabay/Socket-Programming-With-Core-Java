@@ -29,7 +29,12 @@ public class GetHandlerRoomServerAvailability implements HttpHandler {
         parameters = parseQuery(he.getRequestURI().getQuery()); //parse the url and store the parameters in parameters map
 
         if(Integer.parseInt(parameters.get("day"))>7 || Integer.parseInt(parameters.get("day"))<1 ) {
-            response = "<h1>400 BAD REQUEST</h1>";
+            response = "<HTML>\n" +
+                    "<HEAD>\n" +
+                    "<TITLE>Error</TITLE>\n" +
+                    "</HEAD>\n" +
+                    "<BODY> Day value should be between 1-7 </BODY>\n" +
+                    "</HTML>";;
             he.sendResponseHeaders(400,response.length());
             OutputStream os = he.getResponseBody();
             os.write(response.getBytes());
@@ -63,14 +68,13 @@ public class GetHandlerRoomServerAvailability implements HttpHandler {
                     "<HEAD>\n" +
                     "<TITLE>SUCCESS</TITLE>\n" +
                     "</HEAD>\n" +
-                    "<BODY>Available hours for " + parameters.get("name") + " at day " + wantedDay + ": </BODY>\n" +
-                    "</HTML> ";
+                    "<BODY>Available hours for " + parameters.get("name") + " at day " + wantedDay + ": ";
             for(int i=0; i<availableHours.size(); i++){
                 //Beautify the availableHours list and return the response message
                 String[] currentAvailableHour = availableHours.get(i).split("-");
                 response += currentAvailableHour[0] + ":00 - " + currentAvailableHour[1] + ":00 \n";
             }
-            response += "</h1>";
+            response += "</BODY>\n</HTML>";
             he.sendResponseHeaders(200, response.length());
         }
         OutputStream os = he.getResponseBody();

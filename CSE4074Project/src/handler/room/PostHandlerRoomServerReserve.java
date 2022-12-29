@@ -42,7 +42,7 @@ public class PostHandlerRoomServerReserve implements HttpHandler {
             return;
         }
         try {
-            isAvailable = handleInsert(parameters.get("name"),parameters.get("day"),parameters.get("hour"), parameters.get("duration"), isAvailable); //if the room already exists, doesExist variable will be true
+            isAvailable = handleInsert(parameters.get("name"),parameters.get("day"),parameters.get("hour"), parameters.get("duration"), parameters.get("activity"), isAvailable); //if the room already exists, doesExist variable will be true
         } catch (SQLException e) {
             throw new RuntimeException(e);
         }
@@ -77,7 +77,7 @@ public class PostHandlerRoomServerReserve implements HttpHandler {
         os.write(response.getBytes());
         os.close();
     }
-    public boolean handleInsert(Object name,Object day,Object hour,Object duration, boolean isAvailable) throws SQLException {
+    public boolean handleInsert(Object name,Object day,Object hour,Object duration, Object activity, boolean isAvailable) throws SQLException {
         connectDatabase(); //opened the postgresql connection
         Connection c = DriverManager
                 .getConnection("jdbc:postgresql://localhost:5432/postgres",
@@ -113,7 +113,8 @@ public class PostHandlerRoomServerReserve implements HttpHandler {
                 ) {isAvailable = false; // if the room reserved that time make isAvailable false
                 break;}
             }}
-        String insertRoom = "INSERT INTO public.reservation(\"room\", \"day\", \"hour\" , \"duration\") VALUES('" + name.toString() +"' , " + wantedDay + "," + wantedHour + "," +  Integer.parseInt(duration.toString()) + ")";
+        if(activity==null) activity = "";
+        String insertRoom = "INSERT INTO public.reservation(\"room\", \"day\", \"hour\" , \"duration\", \"activity\") VALUES('" + name.toString() +"' , " + wantedDay + "," + wantedHour + "," +  Integer.parseInt(duration.toString()) + ",'" + activity.toString() + "')";
         if(isAvailable) stmt.execute(insertRoom); //if room doesn't exist insert it to database
         stmt.close();
         c.close(); //close the connection

@@ -14,9 +14,8 @@ import java.util.Map;
 
 import static util.Parser.parseQuery;
 
-public class GetHandlerRoomServerListAvailabilityAll implements HttpHandler {
-    @Override
-    public void handle(HttpExchange he) throws IOException {
+public class GetHandlerReservationServerListAvailabilityAll {
+    public static void handle(HttpExchange he) throws IOException {
         String response = "";
         // parse request
         Map<String, String> parameters = new HashMap<String, String>(); //url parameters
@@ -26,6 +25,12 @@ public class GetHandlerRoomServerListAvailabilityAll implements HttpHandler {
         parameters = parseQuery(he.getRequestURI().getQuery()); //parse the url and store the parameters in parameters map
         int availabilityStatus=0;
         StringBuffer content = new StringBuffer();
+        content.append("<HTML>\n" +
+                "<HEAD>\n" +
+                "<TITLE>SUCCESS</TITLE>\n" +
+                "</HEAD>\n" +
+                "<BODY>\n" +
+                "<ul>");
         for(int i=1; i<8; i++){
             //in this for loop we will send requests to room servers checkAvailability api for each day of the week
             String checkActivityUrl = "http://localhost:9000/checkavailability?name=" + parameters.get("room")
@@ -43,12 +48,20 @@ public class GetHandlerRoomServerListAvailabilityAll implements HttpHandler {
                     new InputStreamReader(connection.getInputStream()));
             String inputLine;
             while ((inputLine = in.readLine()) != null) {
-                content.append(inputLine);
+                if(!inputLine.equals("<HTML>") && !inputLine.equals("<HEAD>") && !inputLine.equals("<HEAD>") && !inputLine.equals("<TITLE>SUCCESS</TITLE>")
+                        && !inputLine.equals("</HEAD>") && !inputLine.equals("</HTML>") && !inputLine.equals("</BODY>")){
+                    if(inputLine.substring(0,6).equals("<BODY>")){
+                        content.append("<li>" + inputLine.substring(6));
+                    }
+                    else
+                        content.append(inputLine);
+                }
             }
+
             in.close();
             connection.disconnect();
         }
-
+        content.append("</ul>\n</BODY>\n</HTML>");
         he.sendResponseHeaders(availabilityStatus, content.length());
         OutputStream os = he.getResponseBody();
         os.write(content.toString().getBytes());

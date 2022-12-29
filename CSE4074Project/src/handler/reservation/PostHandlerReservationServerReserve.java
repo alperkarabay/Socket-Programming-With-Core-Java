@@ -50,7 +50,7 @@ public class PostHandlerReservationServerReserve implements HttpHandler {
 
         //we will connect to reservation api of room server with this url
         String roomReservationUrl = "http://localhost:9000/reserve?name=" + parameters.get("room") + "&day="
-                + parameters.get("day") + "&hour=" + parameters.get("hour") + "&duration=" + parameters.get("duration");
+                + parameters.get("day") + "&hour=" + parameters.get("hour") + "&duration=" + parameters.get("duration") + "&activity=" + parameters.get("activity");
         url = new URL(roomReservationUrl);
         connection = (HttpURLConnection) url.openConnection();
         int reservationStatus = connection.getResponseCode();

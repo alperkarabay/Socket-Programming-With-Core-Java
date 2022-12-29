@@ -4,6 +4,9 @@ import com.sun.net.httpserver.HttpServer;
 import handler.activity.DeleteHandlerActivityServer;
 import handler.activity.GetHandlerActivityServerCheck;
 import handler.activity.PostHandlerActivityServerAdd;
+import handler.reservation.GetHandlerReservationServerDisplay;
+import handler.reservation.GetHandlerReservationServerList;
+import handler.reservation.GetHandlerReservationServerListAvailabilityDay;
 import handler.reservation.PostHandlerReservationServerReserve;
 import handler.room.RootHandlerRoomServer;
 
@@ -19,6 +22,9 @@ public class ReservationServer{
         roomServer.createContext("/add", new PostHandlerActivityServerAdd());
         roomServer.createContext("/reserve", new PostHandlerReservationServerReserve());
         roomServer.createContext("/check", new GetHandlerActivityServerCheck());
+        roomServer.createContext("/listavailability", new GetHandlerReservationServerList());
+        roomServer.createContext("/display", new GetHandlerReservationServerDisplay());
+
 
         roomServer.setExecutor(null);
         roomServer.start();
