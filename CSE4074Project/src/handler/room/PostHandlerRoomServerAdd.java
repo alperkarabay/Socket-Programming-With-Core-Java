@@ -2,10 +2,8 @@ package handler.room;
 
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.OutputStream;
+
+import java.io.*;
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -13,20 +11,26 @@ import java.util.List;
 import java.util.Map;
 
 import static database.PostgreSql.connectDatabase;
+import static util.Parser.parseBody;
 import static util.Parser.parseQuery;
 
-public class PostHandlerRoomServerAdd implements HttpHandler {
-    @Override
-    public void handle(HttpExchange he) throws IOException {
+public class PostHandlerRoomServerAdd  {
+
+    public static void handleAddRoom(PrintWriter out, String body, String path) throws IOException {
         boolean doesExist=false;
+        String name = "";
         // parse request
         Map<String, String> parameters = new HashMap<String, String>(); //url parameters
-        InputStreamReader isr = new InputStreamReader(he.getRequestBody(), "utf-8");
-        BufferedReader br = new BufferedReader(isr);
-        String query = br.readLine();
-        parameters = parseQuery(he.getRequestURI().getQuery()); //parse the url and store the parameters in parameters map
+        if(body == null) {
+            parameters = parseQuery(path);//parse the url and store the parameters in parameters map
+            // if body is null, this is a get request so we will fetch the room name from url
+        }
+        else{
+            parameters = parseBody(body);
+            //else we will fetch the room name from body
+        }
         try {
-            doesExist = handleInsert(parameters.get("name"),doesExist); //if the room already exists, doesExist variable will be true
+            doesExist = handleInsertRoom(parameters.get("name"),doesExist); //if the room already exists, doesExist variable will be true
         } catch (SQLException e) {
             throw new RuntimeException(e);
         }
@@ -37,7 +41,10 @@ public class PostHandlerRoomServerAdd implements HttpHandler {
                     "<HEAD>\n" +
                     "<TITLE>Room Added</TITLE>\n" +
                     "</HEAD><BODY>Room with name " + parameters.get("name") + " is successfully added.</BODY></HTML>";
-            he.sendResponseHeaders(200, response.length());
+            out.println("HTTP/1.1 200 OK");
+            out.println("Content-Type: text/html");
+            out.println("");
+            out.println(response);
         }
         else{
             response = "<HTML>\n" +
@@ -45,13 +52,14 @@ public class PostHandlerRoomServerAdd implements HttpHandler {
                     "<TITLE>Error</TITLE>\n" +
                     "</HEAD><BODY> Room with name " + parameters.get("name") + " is already exists.</BODY>\n" +
                     "</HTML>";
-            he.sendResponseHeaders(403, response.length());
+            out.println("HTTP/1.1 403 FORBIDDEN");
+            out.println("Content-Type: text/html");
+            out.println("");
+            out.println(response);
         }
-        OutputStream os = he.getResponseBody();
-        os.write(response.getBytes());
-        os.close();
+
     }
-    public boolean handleInsert(Object name, boolean doesExist) throws SQLException {
+    public static boolean handleInsertRoom(Object name, boolean doesExist) throws SQLException {
         connectDatabase(); //opened the postgresql connection
         Connection c = DriverManager
                 .getConnection("jdbc:postgresql://localhost:5432/postgres",

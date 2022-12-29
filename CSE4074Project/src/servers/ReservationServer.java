@@ -18,7 +18,6 @@ public class ReservationServer{
         int port = 9002;
         HttpServer roomServer = HttpServer.create(new InetSocketAddress(port), 0);
         System.out.println("Reservation server started at " + port);
-        roomServer.createContext("/", new RootHandlerRoomServer());
         roomServer.createContext("/add", new PostHandlerActivityServerAdd());
         roomServer.createContext("/reserve", new PostHandlerReservationServerReserve());
         roomServer.createContext("/check", new GetHandlerActivityServerCheck());

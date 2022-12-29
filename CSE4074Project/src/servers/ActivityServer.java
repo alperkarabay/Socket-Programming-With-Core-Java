@@ -14,7 +14,6 @@ public class ActivityServer {
         int port = 9001;
         HttpServer roomServer = HttpServer.create(new InetSocketAddress(port), 0);
         System.out.println("Activity server started at " + port);
-        roomServer.createContext("/", new RootHandlerRoomServer());
         roomServer.createContext("/add", new PostHandlerActivityServerAdd());
         roomServer.createContext("/remove", new DeleteHandlerActivityServer());
         roomServer.createContext("/check", new GetHandlerActivityServerCheck());
