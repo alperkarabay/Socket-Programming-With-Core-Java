@@ -11,7 +11,10 @@ import java.util.List;
 import java.util.Map;
 
 import static database.PostgreSql.connectDatabase;
-import static handler.room.PostHandlerRoomServerAdd.handleAddRoom;
+import static handler.room.HandlerRoomServerAdd.handleAddRoom;
+import static handler.room.HandlerRoomServerAvailability.handleCheckRoomAvailability;
+import static handler.room.HandlerRoomServerDelete.handleDeleteRoom;
+import static handler.room.HandlerRoomServerReserve.handleReserveRoom;
 import static util.Parser.parseQuery;
 
 public class RequestHandlerRoomServer extends Thread{
@@ -37,6 +40,10 @@ public class RequestHandlerRoomServer extends Thread{
                     // Handle the GET request
                     if (path.equals("/")) handleRoot(out);
                     else if(path.substring(0,4).equals("/add")) handleAddRoom(out, null , path);
+                    else if(path.substring(0,7).equals("/remove")) handleDeleteRoom(out,null,path);
+                    else if(path.substring(0,8).equals("/reserve")) handleReserveRoom(out,null,path);
+                    else if(path.substring(0,18).equals("/checkavailability")) handleCheckRoomAvailability(out,null,path);
+
                 } else if (headerLine.startsWith("POST")) {
                     String[] tokens = headerLine.split(" ");
                     String path = tokens[1];
@@ -49,6 +56,12 @@ public class RequestHandlerRoomServer extends Thread{
 
                     // Handle the POST request
                     if(path.substring(0,4).equals("/add")) handleAddRoom(out,body.toString(), path);
+                    else if(path.substring(0,7).equals("/remove")) handleDeleteRoom(out,body.toString(),path);
+                    else if(path.substring(0,8).equals("/reserve")) handleReserveRoom(out,body.toString(),path);
+                    else if(path.substring(0,18).equals("/checkavailability")) handleCheckRoomAvailability(out,body.toString(),path);
+
+
+
                 }
             }
 

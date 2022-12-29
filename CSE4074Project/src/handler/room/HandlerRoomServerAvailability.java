@@ -3,10 +3,7 @@ package handler.room;
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.OutputStream;
+import java.io.*;
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -14,31 +11,37 @@ import java.util.List;
 import java.util.Map;
 
 import static database.PostgreSql.connectDatabase;
+import static util.Parser.parseBody;
 import static util.Parser.parseQuery;
 
-public class GetHandlerRoomServerAvailability implements HttpHandler {
-    @Override
-    public void handle(HttpExchange he) throws IOException {
+public class HandlerRoomServerAvailability {
+
+    public static void handleCheckRoomAvailability(PrintWriter out, String body, String path) throws IOException {
         List<String> availableHours; //we will user this array for storing the reserved hours
         // parse request
+        boolean doesExist=false;
+        // parse request
         Map<String, String> parameters = new HashMap<String, String>(); //url parameters
-        InputStreamReader isr = new InputStreamReader(he.getRequestBody(), "utf-8");
-        BufferedReader br = new BufferedReader(isr);
-        String query = br.readLine();
+        if(body == null) {
+            parameters = parseQuery(path);//parse the url and store the parameters in parameters map
+            // if body is null, this is a get request so we will fetch parameters from url
+        }
+        else{
+            parameters = parseBody(body);
+            //else we will fetch the room name from body
+        }
         String response = "";
-        parameters = parseQuery(he.getRequestURI().getQuery()); //parse the url and store the parameters in parameters map
-
-        if(Integer.parseInt(parameters.get("day"))>7 || Integer.parseInt(parameters.get("day"))<1 ) {
+        if(Integer.parseInt(parameters.get("day"))>7 || Integer.parseInt(parameters.get("day"))<1) {
             response = "<HTML>\n" +
                     "<HEAD>\n" +
                     "<TITLE>Error</TITLE>\n" +
                     "</HEAD>\n" +
-                    "<BODY> Day value should be between 1-7 </BODY>\n" +
-                    "</HTML>";;
-            he.sendResponseHeaders(400,response.length());
-            OutputStream os = he.getResponseBody();
-            os.write(response.getBytes());
-            os.close();
+                    "<BODY>BAD REQUEST</BODY>\n" +
+                    "</HTML>";
+            out.println("HTTP/1.1 400 BAD REQUEST");
+            out.println("Content-Type: text/html");
+            out.println("");
+            out.println(response);
             return;
         }
 
@@ -61,7 +64,10 @@ public class GetHandlerRoomServerAvailability implements HttpHandler {
                     "</HEAD>\n" +
                     "<BODY> No room exists with name " + parameters.get("name") + "</BODY>\n" +
                     "</HTML>";
-            he.sendResponseHeaders(404, response.length());
+            out.println("HTTP/1.1 404 NOT FOUND");
+            out.println("Content-Type: text/html");
+            out.println("");
+            out.println(response);
         }
         else {
             response = "<HTML>\n" +
@@ -75,13 +81,14 @@ public class GetHandlerRoomServerAvailability implements HttpHandler {
                 response += currentAvailableHour[0] + ":00 - " + currentAvailableHour[1] + ":00 \n";
             }
             response += "</BODY>\n</HTML>";
-            he.sendResponseHeaders(200, response.length());
+            out.println("HTTP/1.1 200 OK");
+            out.println("Content-Type: text/html");
+            out.println("");
+            out.println(response);
         }
-        OutputStream os = he.getResponseBody();
-        os.write(response.getBytes());
-        os.close();
+
     }
-    public List<String> handleAvailableHours(Object name , Object day) throws SQLException {
+    public static List<String> handleAvailableHours(Object name , Object day) throws SQLException {
         connectDatabase(); //opened the postgresql connection
         Connection c = DriverManager
                 .getConnection("jdbc:postgresql://localhost:5432/postgres",
@@ -116,7 +123,7 @@ public class GetHandlerRoomServerAvailability implements HttpHandler {
         return availableHours;
     }
 
-    public List<String> getAvailableHours(List<String> reservedHours){
+    public static List<String> getAvailableHours(List<String> reservedHours){
         List<String> availableHours = new ArrayList<>();
         //if there is not any reservation, available hours will simply be 0-23
         availableHours.add("0-23");

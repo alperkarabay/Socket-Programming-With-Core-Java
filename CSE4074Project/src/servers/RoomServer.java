@@ -32,8 +32,7 @@ public class RoomServer {
             System.out.println("Error starting server: " + e.getMessage());
         }
     }
-      /*  roomServer.createContext("/", new RootHandlerRoomServer());
-        roomServer.createContext("/add", new PostHandlerRoomServerAdd());
+      /*
         roomServer.createContext("/remove", new DeleteHandlerRoomServer());
         roomServer.createContext("/reserve", new PostHandlerRoomServerReserve());
         roomServer.createContext("/checkavailability", new GetHandlerRoomServerAvailability());

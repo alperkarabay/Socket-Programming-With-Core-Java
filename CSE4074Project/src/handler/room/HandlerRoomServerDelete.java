@@ -14,9 +14,9 @@ import static database.PostgreSql.connectDatabase;
 import static util.Parser.parseBody;
 import static util.Parser.parseQuery;
 
-public class PostHandlerRoomServerAdd  {
+public class HandlerRoomServerDelete{
 
-    public static void handleAddRoom(PrintWriter out, String body, String path) throws IOException {
+    public static void handleDeleteRoom(PrintWriter out, String body, String path) throws IOException {
         boolean doesExist=false;
         String name = "";
         // parse request
@@ -28,19 +28,20 @@ public class PostHandlerRoomServerAdd  {
         else{
             parameters = parseBody(body);
             //else we will fetch the room name from body
-        }
-        try {
-            doesExist = handleInsertRoom(parameters.get("name"),doesExist); //if the room already exists, doesExist variable will be true
+        } try {
+            doesExist = handleDelete(parameters.get("name"),doesExist); //if the room already exists, doesExist variable will be true
         } catch (SQLException e) {
             throw new RuntimeException(e);
         }
         String response = "";
         // send response
-        if(!doesExist){ //that if statement executes when the room doesn't exist before so it is added to database
+        if(doesExist){ //that if statement executes when the room exists before so it is deleted from database
             response = "<HTML>\n" +
                     "<HEAD>\n" +
-                    "<TITLE>Room Added</TITLE>\n" +
-                    "</HEAD><BODY>Room with name " + parameters.get("name") + " is successfully added.</BODY></HTML>";
+                    "<TITLE>Room Removed Successfully</TITLE>\n" +
+                    "</HEAD>\n" +
+                    "<BODY> Room with name" + parameters.get("name") + " is successfully removed </BODY>\n" +
+                    "</HTML>";
             out.println("HTTP/1.1 200 OK");
             out.println("Content-Type: text/html");
             out.println("");
@@ -50,7 +51,7 @@ public class PostHandlerRoomServerAdd  {
             response = "<HTML>\n" +
                     "<HEAD>\n" +
                     "<TITLE>Error</TITLE>\n" +
-                    "</HEAD><BODY> Room with name " + parameters.get("name") + " is already exists.</BODY>\n" +
+                    "</HEAD> <BODY> Room with name " + parameters.get("name") + " is not found. </BODY>\n" +
                     "</HTML>";
             out.println("HTTP/1.1 403 FORBIDDEN");
             out.println("Content-Type: text/html");
@@ -59,7 +60,7 @@ public class PostHandlerRoomServerAdd  {
         }
 
     }
-    public static boolean handleInsertRoom(Object name, boolean doesExist) throws SQLException {
+    public static boolean handleDelete(Object name, boolean doesExist) throws SQLException {
         connectDatabase(); //opened the postgresql connection
         Connection c = DriverManager
                 .getConnection("jdbc:postgresql://localhost:5432/postgres",
@@ -77,11 +78,10 @@ public class PostHandlerRoomServerAdd  {
                 doesExist=true; // if the room already exists, turn the doesExist variable into true
                 break;
             }
-        String insertRoom = "INSERT INTO public.room(\"name\") VALUES('" + name.toString() +"')";
-        if(!doesExist) stmt.execute(insertRoom); //if room doesn't exist insert it to database
+        String deleteRoom = "DELETE FROM public.room WHERE name = '" + name.toString() +"'";
+        if(doesExist) stmt.execute(deleteRoom); //if room exists delete it from database
         stmt.close();
         c.close(); //close the connection
         return doesExist;
     }
-
 }

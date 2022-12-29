@@ -3,10 +3,7 @@ package handler.room;
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.OutputStream;
+import java.io.*;
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -14,19 +11,24 @@ import java.util.List;
 import java.util.Map;
 
 import static database.PostgreSql.connectDatabase;
+import static util.Parser.parseBody;
 import static util.Parser.parseQuery;
 
-public class PostHandlerRoomServerReserve implements HttpHandler {
-    @Override
-    public void handle(HttpExchange he) throws IOException {
+public class HandlerRoomServerReserve{
+    public static void handleReserveRoom(PrintWriter out, String body, String path) throws IOException {
         boolean isAvailable=true;
         String response = "";
         // parse request
         Map<String, String> parameters = new HashMap<String, String>(); //url parameters
-        InputStreamReader isr = new InputStreamReader(he.getRequestBody(), "utf-8");
-        BufferedReader br = new BufferedReader(isr);
-        String query = br.readLine();
-        parameters = parseQuery(he.getRequestURI().getQuery()); //parse the url and store the parameters in parameters map
+        if(body == null) {
+            parameters = parseQuery(path);//parse the url and store the parameters in parameters map
+            // if body is null, this is a get request so we will fetch the room name from url
+        }
+        else{
+            parameters = parseBody(body);
+            //else we will fetch the room name from body
+        }
+
         if(Integer.parseInt(parameters.get("day"))>7 || Integer.parseInt(parameters.get("day"))<1
                 || Integer.parseInt(parameters.get("hour"))>24 || Integer.parseInt(parameters.get("duration")) > 24) {
             response = "<HTML>\n" +
@@ -35,10 +37,10 @@ public class PostHandlerRoomServerReserve implements HttpHandler {
                     "</HEAD>\n" +
                     "<BODY>BAD REQUEST</BODY>\n" +
                     "</HTML>";
-            he.sendResponseHeaders(400,response.length());
-            OutputStream os = he.getResponseBody();
-            os.write(response.getBytes());
-            os.close();
+            out.println("HTTP/1.1 400 BAD REQUEST");
+            out.println("Content-Type: text/html");
+            out.println("");
+            out.println(response);
             return;
         }
         try {
@@ -62,7 +64,10 @@ public class PostHandlerRoomServerReserve implements HttpHandler {
                     "</HEAD>\n" +
                     "<BODY> Room with name " + parameters.get("name") + " is successfully reserved at " +  wantedDay + " between " + wantedHour + ":00 - " + wantedFinishHour + ":00 </BODY>\n" +
                     "</HTML>";
-            he.sendResponseHeaders(200, response.length());
+            out.println("HTTP/1.1 200 OK");
+            out.println("Content-Type: text/html");
+            out.println("");
+            out.println(response);
         }
         else{
             response = "<HTML>\n" +
@@ -71,13 +76,13 @@ public class PostHandlerRoomServerReserve implements HttpHandler {
                     "</HEAD>\n" +
                     "<BODY> Room with name " + parameters.get("name") + " is already reserved</BODY>\n" +
                     "</HTML>";
-            he.sendResponseHeaders(403, response.length());
+            out.println("HTTP/1.1 403 FORBIDDEN");
+            out.println("Content-Type: text/html");
+            out.println("");
+            out.println(response);
         }
-        OutputStream os = he.getResponseBody();
-        os.write(response.getBytes());
-        os.close();
     }
-    public boolean handleInsert(Object name,Object day,Object hour,Object duration, Object activity, boolean isAvailable) throws SQLException {
+    public static boolean handleInsert(Object name,Object day,Object hour,Object duration, Object activity, boolean isAvailable) throws SQLException {
         connectDatabase(); //opened the postgresql connection
         Connection c = DriverManager
                 .getConnection("jdbc:postgresql://localhost:5432/postgres",
